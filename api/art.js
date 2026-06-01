@@ -1,60 +1,70 @@
-const axios = require('axios');
+const axios = require("axios");
+const fs = require("fs");
+const path = __dirname + "/tmp/art.png";
 
 exports.config = {
   name: 'art',
   author: 'Delfa frost',
-  description: 'Génère une image par IA via OpenAI DALL-E',
+  description: 'Generates AI art based on a text prompt',
   method: 'get',
   category: 'image generation',
-  link: ['/api/art?prompt=A cute cat']
+  link: ['/art?prompt=A cat with a collar and the tag is Ace']
 };
 
-exports.initialize = async function ({ req, res, log }) {
+exports.initialize = async function ({ req, res }) {
   try {
     const { prompt } = req.query;
     if (!prompt) {
-      return res.status(400).json({ error: 'Le paramètre "prompt" est requis.' });
+      return res.status(400).json({ error: 'Prompt parameter is required' });
     }
 
-    // Récupération de la clé API
-    const apiKey = process.env.OPENAI_API_KEY || global.config.openaiApiKey;
-    if (!apiKey) {
-      return res.status(500).json({ error: "Clé OpenAI manquante." });
-    }
+    const formData = new URLSearchParams({
+      prompt: prompt,
+      output_format: "bytes",
+      user_profile_id: "null",
+      anonymous_user_id: "a584e30d-1996-4598-909f-70c7ac715dc1",
+      request_timestamp: Date.now(),
+      user_is_subscribed: "false",
+      client_id: "pSgX7WgjukXCBoYwDM8G8GLnRRkvAoJlqa5eAVvj95o",
+    });
 
-    // Appel au modèle de génération d'images DALL-E
     const response = await axios.post(
-      "https://api.openai.com/v1/images/generations",
-      {
-        model: "dall-e-2", // Économique et rapide
-        prompt: prompt,
-        n: 1,
-        size: "512x512"
-      },
+      "https://ai-api.magicstudio.com/api/ai-art-generator",
+      formData.toString(),
       {
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+          Accept: "application/json, text/plain, */*",
+          "Accept-Encoding": "gzip, deflate, br, zstd",
+          "Accept-Language": "en-US,en;q=0.9",
+          Origin: "https://magicstudio.com",
+          Referer: "https://magicstudio.com/ai-art-generator/",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        timeout: 20000
-      }
+        responseType: "arraybuffer",
+      },
     );
 
-    const imageUrl = response.data?.data?.[0]?.url;
-
-    if (imageUrl) {
-      // Redirection directe vers l'image (Parfait pour Vercel et l'affichage direct sur le web)
-      return res.redirect(imageUrl);
+    if (response.data) {
+      fs.writeFileSync(path, response.data);
+      res.setHeader("Content-Type", "image/png");
+      res.sendFile(path, (err) => {
+        if (err) {
+          console.error("Error sending file:", err);
+          if (!res.headersSent) {
+            res.status(500).json({ error: "Failed to send generated image" });
+          }
+        }
+        if (fs.existsSync(path)) {
+          fs.unlinkSync(path);
+        }
+      });
     } else {
-      return res.status(500).json({ error: "Impossible de récupérer l'image depuis OpenAI." });
+      res.status(500).json({ error: "No response from AI art generator" });
     }
-
   } catch (error) {
-    if (log && log.error) log.error(`Erreur OpenAI Art (DALL-E): ${error.message}`);
-    return res.status(500).json({ 
-      error: "Échec de la génération de l'image.",
-      details: error.response?.data?.error?.message || error.message
-    });
+    console.error("Error generating art:", error.message);
+    res.status(500).json({ error: "Failed to generate art" });
   }
 };
-
