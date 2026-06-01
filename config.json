@@ -2,8 +2,6 @@
   "name": "Delfa frost",
   "version": "Dashboard",
   "description": "Simple and Easy-to-Use API Documentation",
-  "port": 3000,
-  "openaiApiKey": "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",
   "header": {
     "status": "Online!"
   },
@@ -14,7 +12,10 @@
     {
       "title": "Welcome to API Dashboard",
       "message": "Explore our APIs and integrate them into your projects."
+    },
+    {
+      "title": "New Feature",
+      "message": "We've added support for WebSocket APIs. Check them out!"
     }
   ]
 }
-
