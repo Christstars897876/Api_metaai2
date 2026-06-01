@@ -1,0 +1,20 @@
+{
+  "name": "Delfa frost",
+  "version": "Dashboard",
+  "description": "Simple and Easy-to-Use API Documentation",
+  "port": 3000,
+  "openaiApiKey": "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",
+  "header": {
+    "status": "Online!"
+  },
+  "apiSettings": {
+    "creator": "Delfa frost"
+  },
+  "notifications": [
+    {
+      "title": "Welcome to API Dashboard",
+      "message": "Explore our APIs and integrate them into your projects."
+    }
+  ]
+}
+
